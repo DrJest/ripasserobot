@@ -10,4 +10,6 @@ RUN npm install
 
 COPY . ./
 
+COPY .env ./
+
 CMD ["node", "app.js"]
