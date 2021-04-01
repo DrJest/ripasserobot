@@ -4,10 +4,10 @@ WORKDIR /app
 
 VOLUME /data
 
-COPY package*.json /
+COPY package*.json ./
 
 RUN npm install
 
-COPY . /
+COPY . ./
 
 CMD ["node", "app.js"]
