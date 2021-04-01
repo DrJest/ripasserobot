@@ -1,8 +1,8 @@
 FROM node:14
 
-VOLUME /data
-
 WORKDIR /app
+
+VOLUME /data
 
 COPY package*.json /
 
