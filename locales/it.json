@@ -1,0 +1,7 @@
+{
+  "WELCOME": "Ciao {0} e benvenuto!\nIo sono RipasseroBot. Se vuoi presentarti scrivi /presentami",
+  "CANCEL": "Annulla",
+  "PRESENTAMI": "Rispondi a questo messaggio scrivendo un breve testo di presentazione",
+  "RIP_HEADER": "Ecco a te i ripasserotti!",
+  "PRES_DONE": "La tua presentazione è stata registrata! Ciao Ripasserotto!"
+}

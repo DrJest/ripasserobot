@@ -9,6 +9,8 @@ const TelegramBot = require('node-telegram-bot-api'),
 dotenv.config();
 
 const bot = new TelegramBot(process.env.TOKEN, { polling: true });
+const lc = process.env.LOCALE || 'it';
+const locale = require(path.join(__dirname, 'locales', lc + '.json'));
 
 let db;
 
@@ -33,27 +35,35 @@ open({
   )`);
 });
 
+const welcome = async msg => {
+  let text = locale.WELCOME.replace('{0}', msg.new_chat_member.username ? '@' + msg.new_chat_member.username : msg.new_chat_member.first_name);
+  await bot.sendMessage(msg.chat.id, text, {
+    reply_to_message_id: msg.message_id
+  });
+};
+
 const presentami = async msg => {
-  let reply = await bot.sendMessage(msg.chat.id, 'Rispondi a questo messaggio scrivendo un breve testo di presentazione', {
+  let reply = await bot.sendMessage(msg.chat.id, locale.PRESENTAMI, {
     reply_to_message_id: msg.message_id,
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: 'Annulla', callback_data: 'presentami:cancel' }]
+        [{ text: locale.CANCEL, callback_data: 'presentami:cancel' }]
       ]
     })
   });
-  await db.run('INSERT INTO pending_presentations (chat_id, message_id) VALUES (?, ?)', [reply.chat.id, reply.message_id]);
+  await db.run('INSERT INTO pending_presentations (chat_id, message_id, user_id) VALUES (?, ?, ?)', [reply.chat.id, reply.message_id, msg.from.id]);
 }
 
 const ripasserotti = async msg => {
   let p = await db.all('SELECT * FROM presentations WHERE chat_id = ?', [msg.chat.id]);
-  let text = "Ecco a te i ripasserotti! \n\n" + p.map(u => `${u.username}: ${u.presentation}`).join('\n');
+  let text = locale.RIP_HEADER + "\n\n" + p.map(u => `${u.username}: ${u.presentation}`).join('\n');
   await bot.sendMessage(msg.chat.id, text, {
     reply_to_message_id: msg.message_id
   });
 };
 
 const addPresentation = async (msg, pending) => {
+  if (pending.user_id !== msg.from.id) return;
   await db.run('DELETE FROM presentations WHERE chat_id = ? AND user_id = ?', [
     msg.chat.id,
     msg.from.id
@@ -65,13 +75,16 @@ const addPresentation = async (msg, pending) => {
     msg.text
   ]);
   await db.run('DELETE FROM pending_presentations WHERE chat_id = ? AND message_id = ?', [pending.chat_id, pending.message_id]);
-  await bot.editMessageText('La tua presentazione è stata registrata! Ciao Ripasserotto!', {
+  await bot.editMessageText(locale.PRES_DONE, {
     chat_id: pending.chat_id,
     message_id: pending.message_id
   });
 };
 
 bot.on('message', async msg => {
+  if (msg.new_chat_member) {
+    return await welcome(msg);
+  }
   if (!msg.text) return;
   let text = msg.text.replace('@RipasseroBot', '');
   if (text === '/presentami' || text === '/p') {
