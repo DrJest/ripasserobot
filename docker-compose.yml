@@ -6,7 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    ports:
     volumes:
       - rb_data:/data
 volumes:
